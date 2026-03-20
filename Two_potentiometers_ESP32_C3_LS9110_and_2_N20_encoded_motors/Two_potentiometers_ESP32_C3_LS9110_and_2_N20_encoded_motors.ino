@@ -8,12 +8,13 @@
 // StormingMoose added the potentiometers to control output targets
 // video proof   https://www.youtube.com/shorts/rNg9tuDR440
 
-// Added the RunningMedian library to smooth the potentiometers inputs, numSamples, I am guessing, should be in powers of 2 to facilitate binary sorting
+// Added the RunningMedian library to smooth the potentiometers inputs
 
 #include <RunningMedian.h>
 
-const int numSamples = 8;
-RunningMedian samples = RunningMedian(numSamples);
+const int numSamples = 7;
+RunningMedian samples0 = RunningMedian(numSamples);
+RunningMedian samples1 = RunningMedian(numSamples);
 
 // A class to compute the control signal
 class SimplePID{
@@ -108,24 +109,13 @@ void loop() {
 
   // set target position
   int target[NMOTORS];
-
-  for (int i = 0; i < numSamples; i++) {
-        samples.add(analogRead(pot[0])); // Read from the potentiometer and add to the samples
-        delay(5); // Small delay between readings to avoid sampling the same voltage spike
-  }
- // Get the median value from the collected samples
-  target[0] = samples.getMedian();
-  // Clear the samples for the next reading cycle
-  samples.clear();
-
- for (int i = 0; i < numSamples; i++) {
-        samples.add(analogRead(pot[1])); // Read from the potentiometer and add to the samples
-        delay(5); // Small delay between readings to avoid sampling the same voltage spike
-  }
-  target[1] = 4096 - samples.getMedian();  // adjusted so both turn same way even though on opposite sides
+  // Read from the potentiometers
+  samples0.add(analogRead(pot[0]));  
+  samples1.add(analogRead(pot[01]));  
+  // Get the median value from the collected samples
+  target[0] = samples0.getMedian();
+  target[1] = 4096 - samples1.getMedian();  // adjusted so both turn same way even though on opposite sides
  
-  samples.clear();
-
   // time difference//
   long currT = micros();
   float deltaT = ((float) (currT - prevT))/( 1.0e6 );
